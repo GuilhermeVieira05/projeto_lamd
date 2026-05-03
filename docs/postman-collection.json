@@ -1,0 +1,723 @@
+{
+  "info": {
+    "_postman_id": "reserva-servicos",
+    "name": "Reserva de Serviços — Sprint 1",
+    "description": "Coleção completa dos endpoints REST do sistema de reserva de serviços. Inclui Auth, Serviços e Reservas com exemplos reais de request/response.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string",
+      "description": "URL base do backend"
+    },
+    {
+      "key": "token_client",
+      "value": "",
+      "type": "string",
+      "description": "JWT do usuário CLIENT (preenchido automaticamente após login)"
+    },
+    {
+      "key": "token_provider",
+      "value": "",
+      "type": "string",
+      "description": "JWT do usuário PROVIDER (preenchido automaticamente após login)"
+    },
+    {
+      "key": "service_id",
+      "value": "",
+      "type": "string",
+      "description": "UUID do serviço (preenchido após criar serviço)"
+    },
+    {
+      "key": "reservation_id",
+      "value": "",
+      "type": "string",
+      "description": "UUID da reserva (preenchido após criar reserva)"
+    }
+  ],
+  "item": [
+    {
+      "name": "Usuários",
+      "item": [
+        {
+          "name": "GET /users/me — Meu perfil",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Retorna o perfil completo do usuário autenticado (inclui email)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"name\": \"João Silva\",\n  \"email\": \"joao.cliente@email.com\",\n  \"role\": \"CLIENT\",\n  \"createdAt\": \"2026-05-02T10:00:00.000Z\"\n}"
+            },
+            {
+              "name": "401 Token ausente",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"message\": \"Token not provided\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /users/:id — Perfil público de outro usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/660e8400-e29b-41d4-a716-446655440001",
+              "host": ["{{base_url}}"],
+              "path": ["users", "660e8400-e29b-41d4-a716-446655440001"]
+            },
+            "description": "Retorna perfil público de qualquer usuário pelo ID. Não expõe email nem senha — apenas nome, role e data de cadastro."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n  \"name\": \"Maria Prestadora\",\n  \"role\": \"PROVIDER\",\n  \"createdAt\": \"2026-05-02T10:01:00.000Z\"\n}"
+            },
+            {
+              "name": "404 Usuário não encontrado",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"message\": \"User not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /users/me — Atualizar meu perfil",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva Atualizado\",\n  \"email\": \"joao.novo@email.com\",\n  \"password\": \"novaSenha456\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Atualiza nome, email e/ou senha do próprio usuário. Todos os campos são opcionais, mas ao menos um deve ser enviado. Ao trocar email, verifica unicidade."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"name\": \"João Silva Atualizado\",\n  \"email\": \"joao.novo@email.com\",\n  \"role\": \"CLIENT\",\n  \"createdAt\": \"2026-05-02T10:00:00.000Z\"\n}"
+            },
+            {
+              "name": "409 Email já em uso",
+              "status": "Conflict",
+              "code": 409,
+              "body": "{\n  \"message\": \"Email already in use\"\n}"
+            },
+            {
+              "name": "400 Nenhum campo enviado",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"message\": \"Validation error\",\n  \"errors\": { \"_errors\": [\"At least one field must be provided\"] }\n}"
+            }
+          ]
+        },
+        {
+          "name": "DELETE /users/me — Deletar minha conta",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/users/me",
+              "host": ["{{base_url}}"],
+              "path": ["users", "me"]
+            },
+            "description": "Remove permanentemente a conta do usuário autenticado. Retorna 204 sem corpo."
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "body": ""
+            },
+            {
+              "name": "401 Token ausente",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"message\": \"Token not provided\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Verifica se o servidor está rodando."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"status\": \"ok\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST /auth/register — CLIENT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  console.log('CLIENT registrado:', body.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"João Silva\",\n  \"email\": \"joao.cliente@email.com\",\n  \"password\": \"senha123\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra um novo usuário com role CLIENT."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"João Silva\",\n    \"email\": \"joao.cliente@email.com\",\n    \"role\": \"CLIENT\",\n    \"createdAt\": \"2026-05-02T10:00:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Validation Error",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"message\": \"Validation error\",\n  \"errors\": [\n    { \"field\": \"email\", \"message\": \"Invalid email\" }\n  ]\n}"
+            },
+            {
+              "name": "409 Email já cadastrado",
+              "status": "Conflict",
+              "code": 409,
+              "body": "{\n  \"message\": \"Email already in use\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/register — PROVIDER",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Prestadora\",\n  \"email\": \"maria.provider@email.com\",\n  \"password\": \"senha123\",\n  \"role\": \"PROVIDER\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Registra um novo usuário com role PROVIDER."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"user\": {\n    \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"name\": \"Maria Prestadora\",\n    \"email\": \"maria.provider@email.com\",\n    \"role\": \"PROVIDER\",\n    \"createdAt\": \"2026-05-02T10:01:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — CLIENT",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token_client', body.token);",
+                  "  console.log('Token CLIENT salvo.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"joao.cliente@email.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica o CLIENT e salva o JWT na variável token_client."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"name\": \"João Silva\",\n    \"email\": \"joao.cliente@email.com\",\n    \"role\": \"CLIENT\"\n  }\n}"
+            },
+            {
+              "name": "401 Credenciais inválidas",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"message\": \"Invalid credentials\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "POST /auth/login — PROVIDER",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('token_provider', body.token);",
+                  "  console.log('Token PROVIDER salvo.');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria.provider@email.com\",\n  \"password\": \"senha123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Autentica o PROVIDER e salva o JWT na variável token_provider."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n  \"user\": {\n    \"id\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"name\": \"Maria Prestadora\",\n    \"email\": \"maria.provider@email.com\",\n    \"role\": \"PROVIDER\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Serviços",
+      "item": [
+        {
+          "name": "POST /services — Criar serviço (PROVIDER)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('service_id', body.service.id);",
+                  "  console.log('service_id salvo:', body.service.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Corte de Cabelo Masculino\",\n  \"description\": \"Corte moderno com lavagem e finalização incluídas\",\n  \"price\": 45.00,\n  \"durationMinutes\": 45\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/services",
+              "host": ["{{base_url}}"],
+              "path": ["services"]
+            },
+            "description": "PROVIDER cria um tipo de serviço. Requer JWT com role PROVIDER."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"service\": {\n    \"id\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"name\": \"Corte de Cabelo Masculino\",\n    \"description\": \"Corte moderno com lavagem e finalização incluídas\",\n    \"price\": \"45.00\",\n    \"durationMinutes\": 45,\n    \"active\": true,\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"createdAt\": \"2026-05-02T10:05:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden — apenas PROVIDER",
+              "status": "Forbidden",
+              "code": 403,
+              "body": "{\n  \"message\": \"Insufficient permissions\"\n}"
+            },
+            {
+              "name": "401 Token ausente",
+              "status": "Unauthorized",
+              "code": 401,
+              "body": "{\n  \"message\": \"Token not provided\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /services — Listar serviços",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/services",
+              "host": ["{{base_url}}"],
+              "path": ["services"]
+            },
+            "description": "Lista todos os serviços disponíveis. Requer JWT (qualquer role)."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"services\": [\n    {\n      \"id\": \"770e8400-e29b-41d4-a716-446655440002\",\n      \"name\": \"Corte de Cabelo Masculino\",\n      \"description\": \"Corte moderno com lavagem e finalização incluídas\",\n      \"price\": \"45.00\",\n      \"durationMinutes\": 45,\n      \"active\": true,\n      \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n      \"createdAt\": \"2026-05-02T10:05:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /services/:id — Detalhe do serviço",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/services/{{service_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["services", "{{service_id}}"]
+            },
+            "description": "Retorna detalhes de um serviço pelo ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"service\": {\n    \"id\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"name\": \"Corte de Cabelo Masculino\",\n    \"description\": \"Corte moderno com lavagem e finalização incluídas\",\n    \"price\": \"45.00\",\n    \"durationMinutes\": 45,\n    \"active\": true,\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"createdAt\": \"2026-05-02T10:05:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Não encontrado",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"message\": \"Service not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /services/:id — Atualizar serviço (PROVIDER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 50.00,\n  \"active\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/services/{{service_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["services", "{{service_id}}"]
+            },
+            "description": "PROVIDER atualiza campos de um serviço. Todos os campos são opcionais."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"service\": {\n    \"id\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"name\": \"Corte de Cabelo Masculino\",\n    \"description\": \"Corte moderno com lavagem e finalização incluídas\",\n    \"price\": \"50.00\",\n    \"durationMinutes\": 45,\n    \"active\": true,\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"createdAt\": \"2026-05-02T10:05:00.000Z\"\n  }\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reservas",
+      "item": [
+        {
+          "name": "POST /reservations — Criar reserva (CLIENT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const body = pm.response.json();",
+                  "  pm.collectionVariables.set('reservation_id', body.reservation.id);",
+                  "  console.log('reservation_id salvo:', body.reservation.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceTypeId\": \"{{service_id}}\",\n  \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n  \"notes\": \"Prefiro corte mais curto nas laterais\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "CLIENT cria uma reserva. Status inicial é PENDING. Requer JWT com role CLIENT."
+          },
+          "response": [
+            {
+              "name": "201 Created",
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"clientId\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"serviceTypeId\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"status\": \"PENDING\",\n    \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n    \"notes\": \"Prefiro corte mais curto nas laterais\",\n    \"createdAt\": \"2026-05-02T10:10:00.000Z\",\n    \"updatedAt\": \"2026-05-02T10:10:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "403 Forbidden — apenas CLIENT",
+              "status": "Forbidden",
+              "code": 403,
+              "body": "{\n  \"message\": \"Insufficient permissions\"\n}"
+            },
+            {
+              "name": "404 Serviço não encontrado",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"message\": \"Service not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reservations — Listar reservas do usuário",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"]
+            },
+            "description": "Lista reservas do usuário autenticado. CLIENT vê suas reservas; PROVIDER vê reservas recebidas."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"reservations\": [\n    {\n      \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n      \"clientId\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"serviceTypeId\": \"770e8400-e29b-41d4-a716-446655440002\",\n      \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n      \"status\": \"PENDING\",\n      \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n      \"notes\": \"Prefiro corte mais curto nas laterais\",\n      \"createdAt\": \"2026-05-02T10:10:00.000Z\",\n      \"updatedAt\": \"2026-05-02T10:10:00.000Z\"\n    }\n  ]\n}"
+            }
+          ]
+        },
+        {
+          "name": "GET /reservations/:id — Detalhe da reserva",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}"]
+            },
+            "description": "Retorna detalhes de uma reserva pelo ID."
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"clientId\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"serviceTypeId\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"status\": \"PENDING\",\n    \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n    \"notes\": \"Prefiro corte mais curto nas laterais\",\n    \"createdAt\": \"2026-05-02T10:10:00.000Z\",\n    \"updatedAt\": \"2026-05-02T10:10:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "404 Não encontrado",
+              "status": "Not Found",
+              "code": 404,
+              "body": "{\n  \"message\": \"Reservation not found\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reservations/:id/status — Aceitar reserva (PROVIDER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"ACCEPTED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}", "status"]
+            },
+            "description": "PROVIDER atualiza o status da reserva. Transições válidas: PENDING → ACCEPTED | REFUSED; ACCEPTED → COMPLETED."
+          },
+          "response": [
+            {
+              "name": "200 OK — ACCEPTED",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"status\": \"ACCEPTED\",\n    \"updatedAt\": \"2026-05-02T10:15:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reservations/:id/status — Recusar reserva (PROVIDER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"REFUSED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}", "status"]
+            },
+            "description": "PROVIDER recusa uma reserva PENDING."
+          },
+          "response": [
+            {
+              "name": "200 OK — REFUSED",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"status\": \"REFUSED\",\n    \"updatedAt\": \"2026-05-02T10:15:00.000Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reservations/:id/status — Concluir reserva (PROVIDER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"COMPLETED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["reservations", "{{reservation_id}}", "status"]
+            },
+            "description": "PROVIDER marca uma reserva ACCEPTED como COMPLETED."
+          },
+          "response": [
+            {
+              "name": "200 OK — COMPLETED",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"status\": \"COMPLETED\",\n    \"updatedAt\": \"2026-05-02T10:30:00.000Z\"\n  }\n}"
+            },
+            {
+              "name": "400 Transição inválida",
+              "status": "Bad Request",
+              "code": 400,
+              "body": "{\n  \"message\": \"Invalid status transition\"\n}"
+            },
+            {
+              "name": "403 PROVIDER não autorizado para esta reserva",
+              "status": "Forbidden",
+              "code": 403,
+              "body": "{\n  \"message\": \"Insufficient permissions\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
