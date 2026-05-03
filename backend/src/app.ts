@@ -4,6 +4,7 @@ import cors from 'cors';
 import { ZodError } from 'zod';
 import { AppError } from '@shared/errors/AppError';
 import { authRoutes } from '@modules/auth/auth.routes';
+import { userRoutes } from '@modules/users/user.routes';
 import { serviceRoutes } from '@modules/services/service.routes';
 import { reservationRoutes } from '@modules/reservations/reservation.routes';
 
@@ -17,6 +18,7 @@ app.get('/health', (_req: Request, res: Response) => {
 });
 
 app.use('/auth', authRoutes);
+app.use('/users', userRoutes);
 app.use('/services', serviceRoutes);
 app.use('/reservations', reservationRoutes);
 
