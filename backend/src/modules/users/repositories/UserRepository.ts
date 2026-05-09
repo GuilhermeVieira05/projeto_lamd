@@ -6,7 +6,11 @@ export class UserRepository implements IUserRepository {
   constructor(private readonly repository: Repository<User>) {}
 
   findByEmail(email: string): Promise<User | null> {
-    return this.repository.findOneBy({ email });
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   findById(id: string): Promise<User | null> {

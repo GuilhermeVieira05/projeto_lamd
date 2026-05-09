@@ -20,7 +20,7 @@ export class User {
   @Column({ type: 'varchar', length: 150, unique: true })
   email: string;
 
-  @Column({ name: 'password_hash', type: 'varchar' })
+  @Column({ name: 'password_hash', type: 'varchar', select: false })
   passwordHash: string;
 
   @Column({ type: 'enum', enum: Role })
