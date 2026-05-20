@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class InitialSchema1778355999376 implements MigrationInterface {
-    name = 'InitialSchema1778355999376'
+export class InitialSchema1700000000000 implements MigrationInterface {
+    name = 'InitialSchema1700000000000'
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`CREATE TYPE "public"."reservations_status_enum" AS ENUM('PENDING', 'ACCEPTED', 'REFUSED', 'COMPLETED')`);
