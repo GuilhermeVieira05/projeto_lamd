@@ -7,6 +7,7 @@ import { authRoutes } from '@modules/auth/auth.routes';
 import { userRoutes } from '@modules/users/user.routes';
 import { serviceRoutes } from '@modules/services/service.routes';
 import { reservationRoutes } from '@modules/reservations/reservation.routes';
+import { notificationRoutes } from '@modules/notifications/notification.routes';
 
 const app = express();
 
@@ -21,6 +22,7 @@ app.use('/auth', authRoutes);
 app.use('/users', userRoutes);
 app.use('/services', serviceRoutes);
 app.use('/reservations', reservationRoutes);
+app.use('/notifications', notificationRoutes);
 
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {

@@ -1,10 +1,13 @@
 import { AppDataSource } from '@infra/database';
+import { RabbitMQProducer } from '@infra/messaging';
 import { User } from '@modules/users/entities/User.entity';
 import { ServiceType } from '@modules/services/entities/ServiceType.entity';
 import { Reservation } from '@modules/reservations/entities/Reservation.entity';
+import { Notification } from '@modules/notifications/entities/notification.entity';
 import { UserRepository } from '@modules/users/repositories/UserRepository';
 import { ServiceRepository } from '@modules/services/repositories/ServiceRepository';
 import { ReservationRepository } from '@modules/reservations/repositories/ReservationRepository';
+import { NotificationRepository } from '@modules/notifications/repositories/NotificationRepository';
 import { RegisterUseCase } from '@modules/auth/usecases/RegisterUseCase';
 import { LoginUseCase } from '@modules/auth/usecases/LoginUseCase';
 import { GetUserByIdUseCase } from '@modules/users/usecases/GetUserByIdUseCase';
@@ -19,12 +22,41 @@ import { CreateReservationUseCase } from '@modules/reservations/usecases/CreateR
 import { ListReservationsUseCase } from '@modules/reservations/usecases/ListReservationsUseCase';
 import { GetReservationByIdUseCase } from '@modules/reservations/usecases/GetReservationByIdUseCase';
 import { UpdateReservationStatusUseCase } from '@modules/reservations/usecases/UpdateReservationStatusUseCase';
+import { CancelReservationUseCase } from '@modules/reservations/usecases/CancelReservationUseCase';
+import { ListNotificationsUseCase } from '@modules/notifications/usecases/ListNotificationsUseCase';
+import { MarkAsReadUseCase } from '@modules/notifications/usecases/MarkAsReadUseCase';
+import { MarkAllAsReadUseCase } from '@modules/notifications/usecases/MarkAllAsReadUseCase';
 
-// Users
 function makeUserRepository(): UserRepository {
   return new UserRepository(AppDataSource.getRepository(User));
 }
 
+function makeServiceRepository(): ServiceRepository {
+  return new ServiceRepository(AppDataSource.getRepository(ServiceType));
+}
+
+export function makeReservationRepository(): ReservationRepository {
+  return new ReservationRepository(AppDataSource.getRepository(Reservation));
+}
+
+export function makeNotificationRepository(): NotificationRepository {
+  return new NotificationRepository(AppDataSource.getRepository(Notification));
+}
+
+export function makeEventPublisher(): RabbitMQProducer {
+  return new RabbitMQProducer();
+}
+
+// Auth
+export function makeRegisterUseCase(): RegisterUseCase {
+  return new RegisterUseCase(makeUserRepository());
+}
+
+export function makeLoginUseCase(): LoginUseCase {
+  return new LoginUseCase(makeUserRepository());
+}
+
+// Users
 export function makeGetUserByIdUseCase(): GetUserByIdUseCase {
   return new GetUserByIdUseCase(makeUserRepository());
 }
@@ -41,20 +73,7 @@ export function makeDeleteMeUseCase(): DeleteMeUseCase {
   return new DeleteMeUseCase(makeUserRepository());
 }
 
-// Auth
-export function makeRegisterUseCase(): RegisterUseCase {
-  return new RegisterUseCase(makeUserRepository());
-}
-
-export function makeLoginUseCase(): LoginUseCase {
-  return new LoginUseCase(makeUserRepository());
-}
-
 // Services
-function makeServiceRepository(): ServiceRepository {
-  return new ServiceRepository(AppDataSource.getRepository(ServiceType));
-}
-
 export function makeCreateServiceUseCase(): CreateServiceUseCase {
   return new CreateServiceUseCase(makeServiceRepository());
 }
@@ -68,16 +87,12 @@ export function makeGetServiceByIdUseCase(): GetServiceByIdUseCase {
 }
 
 export function makeUpdateServiceUseCase(): UpdateServiceUseCase {
-  return new UpdateServiceUseCase(makeServiceRepository());
+  return new UpdateServiceUseCase(makeServiceRepository(), makeReservationRepository(), makeEventPublisher());
 }
 
 // Reservations
-function makeReservationRepository(): ReservationRepository {
-  return new ReservationRepository(AppDataSource.getRepository(Reservation));
-}
-
 export function makeCreateReservationUseCase(): CreateReservationUseCase {
-  return new CreateReservationUseCase(makeReservationRepository(), makeServiceRepository());
+  return new CreateReservationUseCase(makeServiceRepository());
 }
 
 export function makeListReservationsUseCase(): ListReservationsUseCase {
@@ -89,5 +104,22 @@ export function makeGetReservationByIdUseCase(): GetReservationByIdUseCase {
 }
 
 export function makeUpdateReservationStatusUseCase(): UpdateReservationStatusUseCase {
-  return new UpdateReservationStatusUseCase(makeReservationRepository());
+  return new UpdateReservationStatusUseCase(makeReservationRepository(), makeEventPublisher());
+}
+
+export function makeCancelReservationUseCase(): CancelReservationUseCase {
+  return new CancelReservationUseCase(makeReservationRepository(), makeEventPublisher());
+}
+
+// Notifications
+export function makeListNotificationsUseCase(): ListNotificationsUseCase {
+  return new ListNotificationsUseCase(makeNotificationRepository());
+}
+
+export function makeMarkAsReadUseCase(): MarkAsReadUseCase {
+  return new MarkAsReadUseCase(makeNotificationRepository());
+}
+
+export function makeMarkAllAsReadUseCase(): MarkAllAsReadUseCase {
+  return new MarkAllAsReadUseCase(makeNotificationRepository());
 }
