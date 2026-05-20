@@ -233,6 +233,8 @@ Content-Type: application/json
 
 Cria uma nova reserva. Apenas clientes (`CLIENT`) podem criar.
 
+A reserva **não é criada imediatamente** — o request publica um comando no RabbitMQ e retorna `202 Accepted`. A criação ocorre de forma assíncrona pelo consumer. O resultado chega via WebSocket (`reservation.created`) ou pode ser consultado em `GET /notifications`.
+
 **Request**
 ```http
 POST /reservations
@@ -241,37 +243,17 @@ Content-Type: application/json
 ```
 ```json
 {
-  "service_type_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-  "scheduled_at": "2026-05-15T14:00:00.000Z",
+  "serviceTypeId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+  "scheduledAt": "2026-05-15T14:00:00.000Z",
   "notes": "Apartamento no 3º andar, portaria com interfone"
 }
 ```
 
 > `notes` é opcional.
 
-**Response 201**
+**Response 202** — comando recebido, processamento assíncrono
 ```json
-{
-  "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
-  "status": "PENDING",
-  "scheduled_at": "2026-05-15T14:00:00.000Z",
-  "notes": "Apartamento no 3º andar, portaria com interfone",
-  "client": {
-    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-    "name": "João Silva"
-  },
-  "service_type": {
-    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-    "name": "Limpeza Residencial",
-    "price": "170.00"
-  },
-  "provider": {
-    "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-    "name": "Maria Prestadora"
-  },
-  "created_at": "2026-05-09T10:10:00.000Z",
-  "updated_at": "2026-05-09T10:10:00.000Z"
-}
+{ "message": "Reservation request received. You will be notified shortly." }
 ```
 
 **Response 403** — usuário não é CLIENT
@@ -344,6 +326,45 @@ Authorization: Bearer <token>
 
 ---
 
+### PATCH /reservations/:id/cancel
+
+Cancela uma reserva. Disponível para `CLIENT` e `PROVIDER` com regras distintas:
+
+- **CLIENT** — pode cancelar somente reservas com status `PENDING`
+- **PROVIDER** — pode cancelar somente reservas com status `ACCEPTED`
+
+Em ambos os casos, a outra parte é notificada via RabbitMQ → WebSocket/inbox.
+
+**Request**
+```http
+PATCH /reservations/d4e5f6a7-b8c9-0123-defa-234567890123/cancel
+Authorization: Bearer <token-do-client-ou-provider>
+```
+
+> Sem body.
+
+**Response 200**
+```json
+{
+  "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+  "status": "CANCELLED",
+  "scheduledAt": "2026-05-15T14:00:00.000Z",
+  "updatedAt": "2026-05-14T09:00:00.000Z"
+}
+```
+
+**Response 422** — transição inválida para o role
+```json
+{ "message": "Cannot cancel a reservation with status ACCEPTED" }
+```
+
+**Response 403** — usuário não é dono da reserva
+```json
+{ "message": "Forbidden" }
+```
+
+---
+
 ### PATCH /reservations/:id/status
 
 Atualiza o status de uma reserva. Apenas o prestador responsável pode executar.
@@ -401,6 +422,83 @@ Content-Type: application/json
 
 ---
 
+## Notificações
+
+Notificações são geradas automaticamente por eventos RabbitMQ e persistidas no banco. Disponíveis para consulta mesmo que o usuário estivesse offline quando o evento ocorreu.
+
+### GET /notifications
+
+Lista todas as notificações do usuário autenticado, da mais recente para a mais antiga.
+
+**Request**
+```http
+GET /notifications
+Authorization: Bearer <token>
+```
+
+**Response 200**
+```json
+{
+  "notifications": [
+    {
+      "id": "f5c5e3fc-ec89-4886-aa0f-43d0d150f400",
+      "userId": "8e53ec45-4dad-4259-bd70-aa2e5ab4fefe",
+      "type": "reservation.created",
+      "channel": "in_app",
+      "payload": {
+        "reservationId": "5b43c2d1-1631-45a3-9490-7ba8927de703",
+        "clientName": "João Silva",
+        "serviceType": "Corte de Cabelo",
+        "scheduledAt": "2026-06-01T10:00:00.000Z"
+      },
+      "read": false,
+      "createdAt": "2026-05-20T02:53:07.230Z"
+    }
+  ],
+  "unreadCount": 1
+}
+```
+
+---
+
+### PATCH /notifications/read-all
+
+Marca todas as notificações do usuário autenticado como lidas.
+
+**Request**
+```http
+PATCH /notifications/read-all
+Authorization: Bearer <token>
+```
+
+**Response 204** — sem corpo
+
+---
+
+### PATCH /notifications/:id/read
+
+Marca uma notificação específica como lida.
+
+**Request**
+```http
+PATCH /notifications/f5c5e3fc-ec89-4886-aa0f-43d0d150f400/read
+Authorization: Bearer <token>
+```
+
+**Response 204** — sem corpo
+
+**Response 404**
+```json
+{ "message": "Notification not found" }
+```
+
+**Response 403** — notificação pertence a outro usuário
+```json
+{ "message": "Forbidden" }
+```
+
+---
+
 ## Códigos de Status HTTP
 
 | Código | Significado |
@@ -419,11 +517,13 @@ Content-Type: application/json
 ```
 PENDING ──► ACCEPTED ──► COMPLETED
         └──► REFUSED
+        └──► CANCELLED  (apenas pelo CLIENT)
 ```
 
-| Status | Descrição |
-|---|---|
-| `PENDING` | Reserva criada, aguardando resposta do prestador |
-| `ACCEPTED` | Prestador aceitou a reserva |
-| `REFUSED` | Prestador recusou a reserva |
-| `COMPLETED` | Serviço realizado e marcado como concluído |
+| Status | Descrição | Quem pode acionar |
+|---|---|---|
+| `PENDING` | Reserva criada, aguardando resposta do prestador | — (estado inicial) |
+| `ACCEPTED` | Prestador aceitou a reserva | PROVIDER |
+| `REFUSED` | Prestador recusou a reserva | PROVIDER |
+| `COMPLETED` | Serviço realizado e marcado como concluído | PROVIDER |
+| `CANCELLED` | Reserva cancelada pelo cliente | CLIENT |

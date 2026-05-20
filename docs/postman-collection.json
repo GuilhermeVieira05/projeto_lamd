@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "reserva-servicos",
-    "name": "Reserva de Serviços — Sprint 1",
-    "description": "Coleção completa dos endpoints REST do sistema de reserva de serviços. Inclui Auth, Serviços e Reservas com exemplos reais de request/response.",
+    "name": "Reserva de Serviços — Sprint 2",
+    "description": "Coleção completa dos endpoints REST. Inclui Auth, Serviços, Reservas e Notificações. Sprint 2: Command Message pattern (POST /reservations retorna 202) e sistema de notificações persistentes.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -35,6 +35,12 @@
       "value": "",
       "type": "string",
       "description": "UUID da reserva (preenchido após criar reserva)"
+    },
+    {
+      "key": "notification_id",
+      "value": "",
+      "type": "string",
+      "description": "UUID da notificação (preenchido após listar notificações)"
     }
   ],
   "item": [
@@ -46,12 +52,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Retorna o perfil completo do usuário autenticado (inclui email)."
           },
@@ -75,12 +89,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/users/660e8400-e29b-41d4-a716-446655440001",
-              "host": ["{{base_url}}"],
-              "path": ["users", "660e8400-e29b-41d4-a716-446655440001"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "660e8400-e29b-41d4-a716-446655440001"
+              ]
             },
             "description": "Retorna perfil público de qualquer usuário pelo ID. Não expõe email nem senha — apenas nome, role e data de cadastro."
           },
@@ -104,8 +126,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -113,8 +141,13 @@
             },
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Atualiza nome, email e/ou senha do próprio usuário. Todos os campos são opcionais, mas ao menos um deve ser enviado. Ao trocar email, verifica unicidade."
           },
@@ -144,12 +177,20 @@
           "request": {
             "method": "DELETE",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/users/me",
-              "host": ["{{base_url}}"],
-              "path": ["users", "me"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
             },
             "description": "Remove permanentemente a conta do usuário autenticado. Retorna 204 sem corpo."
           },
@@ -180,8 +221,12 @@
             "header": [],
             "url": {
               "raw": "{{base_url}}/health",
-              "host": ["{{base_url}}"],
-              "path": ["health"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
             },
             "description": "Verifica se o servidor está rodando."
           },
@@ -218,7 +263,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -226,8 +274,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "description": "Registra um novo usuário com role CLIENT."
           },
@@ -257,7 +310,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -265,8 +321,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/register",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "register"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
             },
             "description": "Registra um novo usuário com role PROVIDER."
           },
@@ -299,7 +360,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -307,8 +371,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Autentica o CLIENT e salva o JWT na variável token_client."
           },
@@ -347,7 +416,10 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -355,8 +427,13 @@
             },
             "url": {
               "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
             },
             "description": "Autentica o PROVIDER e salva o JWT na variável token_provider."
           },
@@ -394,8 +471,14 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_provider}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -403,8 +486,12 @@
             },
             "url": {
               "raw": "{{base_url}}/services",
-              "host": ["{{base_url}}"],
-              "path": ["services"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "services"
+              ]
             },
             "description": "PROVIDER cria um tipo de serviço. Requer JWT com role PROVIDER."
           },
@@ -434,12 +521,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/services",
-              "host": ["{{base_url}}"],
-              "path": ["services"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "services"
+              ]
             },
             "description": "Lista todos os serviços disponíveis. Requer JWT (qualquer role)."
           },
@@ -457,12 +551,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/services/{{service_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["services", "{{service_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "services",
+                "{{service_id}}"
+              ]
             },
             "description": "Retorna detalhes de um serviço pelo ID."
           },
@@ -486,8 +588,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_provider}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -495,8 +603,13 @@
             },
             "url": {
               "raw": "{{base_url}}/services/{{service_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["services", "{{service_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "services",
+                "{{service_id}}"
+              ]
             },
             "description": "PROVIDER atualiza campos de um serviço. Todos os campos são opcionais."
           },
@@ -515,7 +628,7 @@
       "name": "Reservas",
       "item": [
         {
-          "name": "POST /reservations — Criar reserva (CLIENT)",
+          "name": "POST /reservations — Criar reserva (CLIENT) → 202",
           "event": [
             {
               "listen": "test",
@@ -534,38 +647,42 @@
           "request": {
             "method": "POST",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"serviceTypeId\": \"{{service_id}}\",\n  \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n  \"notes\": \"Prefiro corte mais curto nas laterais\"\n}"
+              "raw": "{\n  \"serviceTypeId\": \"{{service_id}}\",\n  \"scheduledAt\": \"2026-07-01T10:00:00.000Z\",\n  \"notes\": \"Opcional\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/reservations",
-              "host": ["{{base_url}}"],
-              "path": ["reservations"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations"
+              ]
             },
             "description": "CLIENT cria uma reserva. Status inicial é PENDING. Requer JWT com role CLIENT."
           },
           "response": [
             {
-              "name": "201 Created",
-              "status": "Created",
-              "code": 201,
-              "body": "{\n  \"reservation\": {\n    \"id\": \"880e8400-e29b-41d4-a716-446655440003\",\n    \"clientId\": \"550e8400-e29b-41d4-a716-446655440000\",\n    \"serviceTypeId\": \"770e8400-e29b-41d4-a716-446655440002\",\n    \"providerId\": \"660e8400-e29b-41d4-a716-446655440001\",\n    \"status\": \"PENDING\",\n    \"scheduledAt\": \"2026-05-10T14:00:00.000Z\",\n    \"notes\": \"Prefiro corte mais curto nas laterais\",\n    \"createdAt\": \"2026-05-02T10:10:00.000Z\",\n    \"updatedAt\": \"2026-05-02T10:10:00.000Z\"\n  }\n}"
-            },
-            {
-              "name": "403 Forbidden — apenas CLIENT",
-              "status": "Forbidden",
-              "code": 403,
-              "body": "{\n  \"message\": \"Insufficient permissions\"\n}"
-            },
-            {
-              "name": "404 Serviço não encontrado",
-              "status": "Not Found",
-              "code": 404,
-              "body": "{\n  \"message\": \"Service not found\"\n}"
+              "name": "202 Accepted — comando recebido",
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Reservation request received. You will be notified shortly.\"\n}"
             }
           ]
         },
@@ -574,12 +691,19 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/reservations",
-              "host": ["{{base_url}}"],
-              "path": ["reservations"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations"
+              ]
             },
             "description": "Lista reservas do usuário autenticado. CLIENT vê suas reservas; PROVIDER vê reservas recebidas."
           },
@@ -597,12 +721,20 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token_client}}" }
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
             ],
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservation_id}}"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservation_id}}"
+              ]
             },
             "description": "Retorna detalhes de uma reserva pelo ID."
           },
@@ -626,8 +758,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_provider}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -635,8 +773,14 @@
             },
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
-              "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservation_id}}", "status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservation_id}}",
+                "status"
+              ]
             },
             "description": "PROVIDER atualiza o status da reserva. Transições válidas: PENDING → ACCEPTED | REFUSED; ACCEPTED → COMPLETED."
           },
@@ -654,8 +798,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_provider}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -663,8 +813,14 @@
             },
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
-              "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservation_id}}", "status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservation_id}}",
+                "status"
+              ]
             },
             "description": "PROVIDER recusa uma reserva PENDING."
           },
@@ -682,8 +838,14 @@
           "request": {
             "method": "PATCH",
             "header": [
-              { "key": "Content-Type", "value": "application/json" },
-              { "key": "Authorization", "value": "Bearer {{token_provider}}" }
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_provider}}"
+              }
             ],
             "body": {
               "mode": "raw",
@@ -691,8 +853,14 @@
             },
             "url": {
               "raw": "{{base_url}}/reservations/{{reservation_id}}/status",
-              "host": ["{{base_url}}"],
-              "path": ["reservations", "{{reservation_id}}", "status"]
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservation_id}}",
+                "status"
+              ]
             },
             "description": "PROVIDER marca uma reserva ACCEPTED como COMPLETED."
           },
@@ -714,6 +882,153 @@
               "status": "Forbidden",
               "code": 403,
               "body": "{\n  \"message\": \"Insufficient permissions\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /reservations/:id/cancel — Cancelar reserva (CLIENT ou PROVIDER)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/reservations/{{reservation_id}}/cancel",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "reservations",
+                "{{reservation_id}}",
+                "cancel"
+              ]
+            },
+            "description": "CLIENT cancela uma reserva própria com status PENDING. Sem body."
+          },
+          "response": [
+            {
+              "name": "200 OK — CANCELLED",
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"id\": \"d4e5f6a7-b8c9-0123-defa-234567890123\",\n  \"status\": \"CANCELLED\",\n  \"scheduledAt\": \"2026-05-15T14:00:00.000Z\",\n  \"updatedAt\": \"2026-05-14T09:00:00.000Z\"\n}"
+            },
+            {
+              "name": "422 Reserva não está PENDING",
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "body": "{\n  \"message\": \"Cannot cancel a reservation with status ACCEPTED\"\n}"
+            },
+            {
+              "name": "403 CLIENT não é dono da reserva",
+              "status": "Forbidden",
+              "code": 403,
+              "body": "{\n  \"message\": \"Forbidden\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Notificações",
+      "item": [
+        {
+          "name": "GET /notifications — Listar notificações",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "200 OK",
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"notifications\": [\n    {\n      \"id\": \"f5c5e3fc-ec89-4886-aa0f-43d0d150f400\",\n      \"userId\": \"8e53ec45-4dad-4259-bd70-aa2e5ab4fefe\",\n      \"type\": \"reservation.created\",\n      \"channel\": \"in_app\",\n      \"payload\": {\n        \"reservationId\": \"5b43c2d1-1631-45a3-9490-7ba8927de703\",\n        \"clientName\": \"Jo\\u00e3o Silva\",\n        \"serviceType\": \"Corte de Cabelo\",\n        \"scheduledAt\": \"2026-06-01T10:00:00.000Z\"\n      },\n      \"read\": false,\n      \"createdAt\": \"2026-05-20T02:53:07.230Z\"\n    }\n  ],\n  \"unreadCount\": 1\n}"
+            }
+          ]
+        },
+        {
+          "name": "PATCH /notifications/read-all — Marcar todas como lidas",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "read-all"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "PATCH /notifications/:id/read — Marcar uma como lida",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token_client}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/{{notification_id}}/read",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "notifications",
+                "{{notification_id}}",
+                "read"
+              ]
+            }
+          },
+          "response": [
+            {
+              "name": "204 No Content",
+              "status": "No Content",
+              "code": 204,
+              "header": [],
+              "body": ""
             }
           ]
         }
