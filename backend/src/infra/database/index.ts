@@ -9,7 +9,7 @@ export const AppDataSource = new DataSource({
   url: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL?.includes('localhost') ? false : { rejectUnauthorized: false },
   synchronize: false,
-  logging: process.env.NODE_ENV === 'development',
+  logging: false,
   entities: [__dirname + '/../../modules/**/entities/*.entity{.ts,.js}'],
   migrations: [__dirname + '/migrations/*{.ts,.js}'],
 });
