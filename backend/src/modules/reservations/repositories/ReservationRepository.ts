@@ -1,6 +1,7 @@
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Reservation } from '@modules/reservations/entities/Reservation.entity';
 import { CreateReservationData, IReservationRepository } from './IReservationRepository';
+import { ReservationStatus } from '@shared/enums/ReservationStatus';
 
 const RELATIONS = ['client', 'provider', 'serviceType'];
 
@@ -24,6 +25,23 @@ export class ReservationRepository implements IReservationRepository {
       where: { providerId },
       relations: RELATIONS,
       order: { createdAt: 'DESC' },
+    });
+  }
+
+  findConflict(serviceTypeId: string, scheduledAt: Date): Promise<Reservation | null> {
+    return this.repository.findOne({
+      where: {
+        serviceTypeId,
+        scheduledAt,
+        status: In([ReservationStatus.PENDING, ReservationStatus.ACCEPTED]),
+      },
+    });
+  }
+
+  findByServiceTypeIdAndStatuses(serviceTypeId: string, statuses: ReservationStatus[]): Promise<Reservation[]> {
+    return this.repository.find({
+      where: { serviceTypeId, status: In(statuses) },
+      relations: RELATIONS,
     });
   }
 

@@ -33,4 +33,10 @@ reservationRoutes.patch(
   (req, res, next) => reservationController.updateStatus(req, res, next),
 );
 
+reservationRoutes.patch(
+  '/:id/cancel',
+  authMiddleware,
+  (req, res, next) => reservationController.cancel(req, res, next),
+);
+
 export { reservationRoutes };

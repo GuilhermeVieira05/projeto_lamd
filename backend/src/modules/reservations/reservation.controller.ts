@@ -7,14 +7,15 @@ import {
   makeGetReservationByIdUseCase,
   makeListReservationsUseCase,
   makeUpdateReservationStatusUseCase,
+  makeCancelReservationUseCase,
 } from '@shared/container';
 
 export class ReservationController {
   async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const dto = CreateReservationDTO.parse(req.body);
-      const reservation = await makeCreateReservationUseCase().execute(req.user!.id, dto);
-      res.status(201).json(reservation);
+      await makeCreateReservationUseCase().execute(req.user!.id, req.user!.name, dto);
+      res.status(202).json({ message: 'Reservation request received. You will be notified shortly.' });
     } catch (err) {
       next(err);
     }
@@ -51,6 +52,19 @@ export class ReservationController {
         req.params.id,
         req.user!.id,
         dto,
+      );
+      res.json(reservation);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async cancel(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const reservation = await makeCancelReservationUseCase().execute(
+        req.params.id,
+        req.user!.id,
+        req.user!.role as 'CLIENT' | 'PROVIDER',
       );
       res.json(reservation);
     } catch (err) {

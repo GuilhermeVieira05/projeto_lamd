@@ -1,16 +1,12 @@
 import { AppError } from '@shared/errors/AppError';
-import { IReservationRepository } from '../repositories/IReservationRepository';
 import { IServiceRepository } from '@modules/services/repositories/IServiceRepository';
+import { getRabbitMQChannel, QUEUE_RESERVATION_COMMANDS } from '@infra/messaging/rabbitmq.connection';
 import { CreateReservationDTO } from '../dtos/CreateReservationDTO';
-import { Reservation } from '../entities/Reservation.entity';
 
 export class CreateReservationUseCase {
-  constructor(
-    private readonly reservationRepository: IReservationRepository,
-    private readonly serviceRepository: IServiceRepository,
-  ) {}
+  constructor(private readonly serviceRepository: IServiceRepository) {}
 
-  async execute(clientId: string, data: CreateReservationDTO): Promise<Reservation> {
+  async execute(clientId: string, clientName: string, data: CreateReservationDTO): Promise<void> {
     const service = await this.serviceRepository.findById(data.serviceTypeId);
 
     if (!service || !service.active) {
@@ -23,12 +19,19 @@ export class CreateReservationUseCase {
       throw new AppError('Scheduled date must be in the future', 400);
     }
 
-    return this.reservationRepository.create({
-      clientId,
-      serviceTypeId: service.id,
-      providerId: service.providerId,
-      scheduledAt,
-      notes: data.notes,
-    });
+    const channel = await getRabbitMQChannel();
+    channel.sendToQueue(
+      QUEUE_RESERVATION_COMMANDS,
+      Buffer.from(JSON.stringify({
+        clientId,
+        clientName,
+        serviceTypeId: data.serviceTypeId,
+        scheduledAt: scheduledAt.toISOString(),
+        notes: data.notes,
+      })),
+      { persistent: true, contentType: 'application/json' },
+    );
+
+    console.info(`[CreateReservationUseCase] Command queued for client ${clientId}`);
   }
 }
