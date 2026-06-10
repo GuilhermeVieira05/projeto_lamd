@@ -4,6 +4,8 @@ import '../../../core/network/ws_client.dart';
 import '../../../core/storage/local_db.dart';
 import '../services/reservations_api.dart';
 
+enum TimeFilter { all, future, past }
+
 class ReservationsProvider extends ChangeNotifier {
   final ReservationsApi _api;
   final WsClient _ws;
@@ -13,6 +15,9 @@ class ReservationsProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
+  TimeFilter timeFilter = TimeFilter.all;
+  Set<String> statusFilter = {};
+
   ReservationsProvider({required ReservationsApi api, required WsClient ws})
       : _api = api,
         _ws = ws {
@@ -20,6 +25,39 @@ class ReservationsProvider extends ChangeNotifier {
   }
 
   List<ReservationModel> get reservations => _reservations;
+
+  List<ReservationModel> get filteredReservations {
+    final now = DateTime.now();
+    return _reservations.where((r) {
+      final passesTime = switch (timeFilter) {
+        TimeFilter.future => r.scheduledAt.isAfter(now),
+        TimeFilter.past   => r.scheduledAt.isBefore(now),
+        TimeFilter.all    => true,
+      };
+      final passesStatus =
+          statusFilter.isEmpty || statusFilter.contains(r.status);
+      return passesTime && passesStatus;
+    }).toList();
+  }
+
+  void setTimeFilter(TimeFilter f) {
+    timeFilter = f;
+    notifyListeners();
+  }
+
+  void toggleStatusFilter(String status) {
+    if (statusFilter.contains(status)) {
+      statusFilter.remove(status);
+    } else {
+      statusFilter.add(status);
+    }
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void seedForTest(List<ReservationModel> items) {
+    _reservations = items;
+  }
 
   Future<void> load() async {
     final cached = await LocalDb.getReservations();

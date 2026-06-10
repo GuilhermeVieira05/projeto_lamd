@@ -36,6 +36,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
       value: _provider,
       child: Consumer<ReservationsProvider>(
         builder: (context, provider, _) {
+          final filtered = provider.filteredReservations;
           return CupertinoPageScaffold(
             backgroundColor: const Color(0xFF1c1c1e),
             child: CustomScrollView(
@@ -46,6 +47,51 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                   largeTitle: Text(
                     'Minhas Reservas',
                     style: TextStyle(color: CupertinoColors.white),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        CupertinoSegmentedControl<TimeFilter>(
+                          groupValue: provider.timeFilter,
+                          onValueChanged: provider.setTimeFilter,
+                          children: const {
+                            TimeFilter.all: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('Todas'),
+                            ),
+                            TimeFilter.future: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('Futuras'),
+                            ),
+                            TimeFilter.past: Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              child: Text('Passadas'),
+                            ),
+                          },
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            _FilterChip(
+                              label: 'Pendentes',
+                              active: provider.statusFilter.contains('PENDING'),
+                              onTap: () => provider.toggleStatusFilter('PENDING'),
+                            ),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Aceitas',
+                              active: provider.statusFilter.contains('ACCEPTED'),
+                              onTap: () => provider.toggleStatusFilter('ACCEPTED'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                      ],
+                    ),
                   ),
                 ),
                 if (provider.isLoading && provider.reservations.isEmpty)
@@ -59,12 +105,18 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                       message: provider.error!,
                     ),
                   )
-                else if (provider.reservations.isEmpty)
+                else if (filtered.isEmpty)
                   SliverFillRemaining(
                     child: _buildEmpty(
-                      icon: CupertinoIcons.calendar_badge_plus,
-                      message: 'Nenhuma reserva ainda',
-                      subtitle: 'Explore os serviços disponíveis e faça sua primeira reserva.',
+                      icon: provider.reservations.isEmpty
+                          ? CupertinoIcons.calendar_badge_plus
+                          : CupertinoIcons.line_horizontal_3_decrease_circle,
+                      message: provider.reservations.isEmpty
+                          ? 'Nenhuma reserva ainda'
+                          : 'Nenhuma reserva para este filtro',
+                      subtitle: provider.reservations.isEmpty
+                          ? 'Explore os serviços disponíveis e faça sua primeira reserva.'
+                          : null,
                     ),
                   )
                 else
@@ -73,9 +125,9 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _ReservationCard(
-                          reservation: provider.reservations[index],
+                          reservation: filtered[index],
                         ),
-                        childCount: provider.reservations.length,
+                        childCount: filtered.length,
                       ),
                     ),
                   ),
@@ -110,6 +162,36 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
               Text(subtitle, style: const TextStyle(fontSize: 14, color: Color(0xFF8e8e93)), textAlign: TextAlign.center),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  const _FilterChip({required this.label, required this.active, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+        decoration: BoxDecoration(
+          color: active ? const Color(0xFF007AFF) : const Color(0xFF2c2c2e),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: active ? CupertinoColors.white : const Color(0xFF8e8e93),
+          ),
         ),
       ),
     );
