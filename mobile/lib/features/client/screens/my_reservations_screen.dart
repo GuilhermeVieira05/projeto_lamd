@@ -1,9 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import '../../../core/auth/auth_provider.dart';
-import '../../../core/auth/token_storage.dart';
-import '../../../core/network/http_client.dart';
 import '../providers/reservations_provider.dart';
 import '../services/reservations_api.dart';
 
@@ -15,28 +12,19 @@ class MyReservationsScreen extends StatefulWidget {
 }
 
 class _MyReservationsScreenState extends State<MyReservationsScreen> {
-  late ReservationsProvider _provider;
-
   @override
   void initState() {
     super.initState();
-    final auth = context.read<AuthProvider>();
-    final tokenStorage = TokenStorage();
-    final http = HttpClient(tokenStorage: tokenStorage)..onUnauthorized = auth.logout;
-    _provider = ReservationsProvider(
-      api: ReservationsApi(http: http),
-      ws: auth.wsClient,
-    );
-    _provider.load();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ReservationsProvider>().load();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _provider,
-      child: Consumer<ReservationsProvider>(
-        builder: (context, provider, _) {
-          final filtered = provider.filteredReservations;
+    return Consumer<ReservationsProvider>(
+      builder: (context, provider, _) {
+        final filtered = provider.filteredReservations;
           return CupertinoPageScaffold(
             backgroundColor: const Color(0xFF1c1c1e),
             child: CustomScrollView(
@@ -138,8 +126,7 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
             ),
           );
         },
-      ),
-    );
+      );
   }
 
   Widget _buildEmpty({required IconData icon, required String message, String? subtitle}) {

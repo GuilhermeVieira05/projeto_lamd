@@ -5,6 +5,7 @@ import '../../../core/auth/auth_provider.dart';
 import '../../../core/auth/token_storage.dart';
 import '../../../core/network/http_client.dart';
 import '../../../core/notifications/notification_provider.dart';
+import '../services/notifications_api.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -14,17 +15,18 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  List<_Notification> _notifications = [];
+  late NotificationsApi _api;
+  List<NotificationModel> _notifications = [];
   bool _isLoading = true;
   String? _error;
-  late HttpClient _http;
 
   @override
   void initState() {
     super.initState();
     final auth = context.read<AuthProvider>();
     final tokenStorage = TokenStorage();
-    _http = HttpClient(tokenStorage: tokenStorage)..onUnauthorized = auth.logout;
+    final http = HttpClient(tokenStorage: tokenStorage)..onUnauthorized = auth.logout;
+    _api = NotificationsApi(http: http);
     _load();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) context.read<NotificationProvider>().resetUnreadCount();
@@ -32,25 +34,31 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Future<void> _load() async {
-    setState(() { _isLoading = true; _error = null; });
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
     try {
-      final response = await _http.get('/notifications');
-      final body = response.data as Map<String, dynamic>;
-      final List data = body['notifications'] as List? ?? [];
+      final result = await _api.listNotifications();
       if (mounted) {
         setState(() {
-          _notifications = data.map((e) => _Notification.fromJson(e as Map<String, dynamic>)).toList();
+          _notifications = result.notifications;
           _isLoading = false;
         });
       }
-    } catch (e) {
-      if (mounted) setState(() { _error = 'Erro ao carregar notificações'; _isLoading = false; });
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _error = 'Erro ao carregar notificações';
+          _isLoading = false;
+        });
+      }
     }
   }
 
   Future<void> _markRead(String id) async {
     try {
-      await _http.patch('/notifications/$id/read');
+      await _api.markRead(id);
       setState(() {
         final idx = _notifications.indexWhere((n) => n.id == id);
         if (idx != -1) _notifications[idx] = _notifications[idx].copyWith(read: true);
@@ -60,7 +68,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   Future<void> _markAllRead() async {
     try {
-      await _http.patch('/notifications/read-all');
+      await _api.markAllRead();
       setState(() {
         _notifications = _notifications.map((n) => n.copyWith(read: true)).toList();
       });
@@ -89,16 +97,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               )
             : null,
       ),
-      child: SafeArea(
-        child: _buildBody(),
-      ),
+      child: SafeArea(child: _buildBody()),
     );
   }
 
   Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CupertinoActivityIndicator());
-    }
+    if (_isLoading) return const Center(child: CupertinoActivityIndicator());
     if (_error != null) {
       return _buildEmpty(
         icon: CupertinoIcons.exclamationmark_circle,
@@ -107,10 +111,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       );
     }
     if (_notifications.isEmpty) {
-      return _buildEmpty(
-        icon: CupertinoIcons.bell_slash,
-        message: 'Nenhuma notificação',
-      );
+      return _buildEmpty(icon: CupertinoIcons.bell_slash, message: 'Nenhuma notificação');
     }
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
@@ -139,7 +140,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             child: Icon(icon, size: 40, color: const Color(0xFF8e8e93)),
           ),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600, color: CupertinoColors.white)),
+          Text(
+            message,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: CupertinoColors.white,
+            ),
+          ),
           if (showRetry) ...[
             const SizedBox(height: 16),
             CupertinoButton(onPressed: _load, child: const Text('Tentar novamente')),
@@ -151,7 +159,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _NotificationCard extends StatelessWidget {
-  final _Notification notification;
+  final NotificationModel notification;
   final VoidCallback onTap;
 
   const _NotificationCard({required this.notification, required this.onTap});
@@ -185,9 +193,23 @@ class _NotificationCard extends StatelessWidget {
     }
   }
 
+  static String _buildMessage(String type, Map<String, dynamic> payload) {
+    switch (type) {
+      case 'reservation.accepted':
+        return 'Sua reserva foi aceita pelo prestador.';
+      case 'reservation.refused':
+        return 'Sua reserva foi recusada pelo prestador.';
+      case 'reservation.completed':
+        return 'O serviço foi marcado como concluído.';
+      default:
+        return payload['message'] as String? ?? 'Você tem uma nova notificação.';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cfg = _config(notification.type);
+    final message = _buildMessage(notification.type, notification.payload);
     final dateStr = DateFormat("dd/MM 'às' HH:mm").format(notification.createdAt.toLocal());
 
     return GestureDetector(
@@ -234,7 +256,8 @@ class _NotificationCard extends StatelessWidget {
                             cfg.label,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: notification.read ? FontWeight.w500 : FontWeight.w700,
+                              fontWeight:
+                                  notification.read ? FontWeight.w500 : FontWeight.w700,
                               color: CupertinoColors.white,
                             ),
                           ),
@@ -243,13 +266,14 @@ class _NotificationCard extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: BoxDecoration(color: cfg.color, shape: BoxShape.circle),
+                            decoration:
+                                BoxDecoration(color: cfg.color, shape: BoxShape.circle),
                           ),
                       ],
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      notification.message,
+                      message,
                       style: const TextStyle(fontSize: 13, color: Color(0xFF8e8e93)),
                     ),
                     const SizedBox(height: 4),
@@ -273,43 +297,4 @@ class _TypeConfig {
   final IconData icon;
   final Color color;
   const _TypeConfig({required this.label, required this.icon, required this.color});
-}
-
-class _Notification {
-  final String id;
-  final String type;
-  final String message;
-  final bool read;
-  final DateTime createdAt;
-
-  const _Notification({
-    required this.id,
-    required this.type,
-    required this.message,
-    required this.read,
-    required this.createdAt,
-  });
-
-  factory _Notification.fromJson(Map<String, dynamic> json) {
-    return _Notification(
-      id: json['id'] as String,
-      type: json['type'] as String? ?? '',
-      message: _buildMessage(json['type'] as String? ?? '', json['payload'] as Map<String, dynamic>? ?? {}),
-      read: json['read'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
-    );
-  }
-
-  static String _buildMessage(String type, Map<String, dynamic> payload) {
-    switch (type) {
-      case 'reservation.accepted': return 'Sua reserva foi aceita pelo prestador.';
-      case 'reservation.refused': return 'Sua reserva foi recusada pelo prestador.';
-      case 'reservation.completed': return 'O serviço foi marcado como concluído.';
-      default: return payload['message'] as String? ?? 'Você tem uma nova notificação.';
-    }
-  }
-
-  _Notification copyWith({bool? read}) => _Notification(
-    id: id, type: type, message: message, read: read ?? this.read, createdAt: createdAt,
-  );
 }

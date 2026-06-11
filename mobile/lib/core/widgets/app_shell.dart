@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../notifications/notification_provider.dart';
+import 'notification_toast.dart';
 
-class AppShell extends StatelessWidget {
+class AppShell extends StatefulWidget {
   final Widget child;
   const AppShell({super.key, required this.child});
 
@@ -23,10 +24,40 @@ class AppShell extends StatelessWidget {
     CupertinoIcons.person_fill,
   ];
 
+  @override
+  State<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends State<AppShell> {
+  late NotificationProvider _notifProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _notifProvider = context.read<NotificationProvider>();
+      _notifProvider.addListener(_onNotification);
+    });
+  }
+
+  @override
+  void dispose() {
+    _notifProvider.removeListener(_onNotification);
+    super.dispose();
+  }
+
+  void _onNotification() {
+    final msg = _notifProvider.latestMessage;
+    if (msg != null && mounted) {
+      NotificationToast.show(context, msg);
+      _notifProvider.clearLatest();
+    }
+  }
+
   int _activeIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < _tabs.length; i++) {
-      if (location.startsWith(_tabs[i])) return i;
+    for (int i = 0; i < AppShell._tabs.length; i++) {
+      if (location.startsWith(AppShell._tabs[i])) return i;
     }
     return 0;
   }
@@ -40,11 +71,11 @@ class AppShell extends StatelessWidget {
       backgroundColor: const Color(0xFF1c1c1e),
       child: Column(
         children: [
-          Expanded(child: child),
+          Expanded(child: widget.child),
           _BottomNavBar(
             activeIndex: activeIndex,
             unreadCount: unreadCount,
-            onTap: (i) => context.go(_tabs[i]),
+            onTap: (i) => context.go(AppShell._tabs[i]),
           ),
         ],
       ),

@@ -2,10 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/auth/auth_provider.dart';
-import '../../../core/auth/token_storage.dart';
-import '../../../core/network/http_client.dart';
-import '../../../core/notifications/notification_provider.dart';
-import '../../../core/widgets/notification_toast.dart';
 import '../providers/services_provider.dart';
 import '../services/services_api.dart';
 
@@ -17,10 +13,6 @@ class ServicesListScreen extends StatefulWidget {
 }
 
 class _ServicesListScreenState extends State<ServicesListScreen> {
-  late ServicesProvider _provider;
-  late HttpClient _httpClient;
-  late NotificationProvider _notifProvider;
-
   String _selectedCategory = 'Todos';
 
   static const _categories = ['Todos', 'Beleza', 'Casa', 'Saúde', 'Tech'];
@@ -35,32 +27,9 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
   @override
   void initState() {
     super.initState();
-    final auth = context.read<AuthProvider>();
-    final tokenStorage = TokenStorage();
-    _httpClient = HttpClient(tokenStorage: tokenStorage)
-      ..onUnauthorized = auth.logout;
-    _provider = ServicesProvider(api: ServicesApi(http: _httpClient));
-    _provider.load();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _notifProvider = context.read<NotificationProvider>();
-      _notifProvider.addListener(_onNotification);
-      _notifProvider.fetchInitialCount(_httpClient);
+      context.read<ServicesProvider>().load();
     });
-  }
-
-  void _onNotification() {
-    final msg = _notifProvider.latestMessage;
-    if (msg != null && mounted) {
-      NotificationToast.show(context, msg);
-      _notifProvider.clearLatest();
-    }
-  }
-
-  @override
-  void dispose() {
-    _notifProvider.removeListener(_onNotification);
-    super.dispose();
   }
 
   List<ServiceModel> _filterByCategory(List<ServiceModel> services) {
@@ -77,13 +46,11 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
     final auth = context.read<AuthProvider>();
     final firstName = auth.user?.name.split(' ').first ?? '';
 
-    return ChangeNotifierProvider.value(
-      value: _provider,
-      child: Consumer<ServicesProvider>(
-        builder: (context, provider, _) {
-          final displayed = _filterByCategory(provider.services);
+    return Consumer<ServicesProvider>(
+      builder: (context, provider, _) {
+        final displayed = _filterByCategory(provider.services);
 
-          return CupertinoPageScaffold(
+        return CupertinoPageScaffold(
             backgroundColor: const Color(0xFF1c1c1e),
             child: CustomScrollView(
               slivers: [
@@ -181,8 +148,7 @@ class _ServicesListScreenState extends State<ServicesListScreen> {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }
 
