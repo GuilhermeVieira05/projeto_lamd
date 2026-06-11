@@ -22,6 +22,14 @@ A arquitetura segue princípios de **Clean Architecture** (separação em módul
 
 ---
 
+## Arquitetura Interna do App Flutter
+
+Para o detalhamento das camadas internas do app Flutter (Screens → Providers → Services → Core), consulte o documento dedicado:
+
+➜ [arquitetura-flutter.md](arquitetura-flutter.md)
+
+---
+
 ## Componentes e Protocolos
 
 | Componente | Tecnologia | Protocolo |

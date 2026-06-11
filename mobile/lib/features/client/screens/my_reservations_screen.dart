@@ -55,25 +55,28 @@ class _MyReservationsScreenState extends State<MyReservationsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        CupertinoSegmentedControl<TimeFilter>(
-                          groupValue: provider.timeFilter,
-                          onValueChanged: provider.setTimeFilter,
-                          children: const {
-                            TimeFilter.all: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('Todas'),
+                        Row(
+                          children: [
+                            _FilterChip(
+                              label: 'Todas',
+                              active: provider.timeFilter == TimeFilter.all,
+                              onTap: () => provider.setTimeFilter(TimeFilter.all),
                             ),
-                            TimeFilter.future: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('Futuras'),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Futuras',
+                              active: provider.timeFilter == TimeFilter.future,
+                              onTap: () => provider.setTimeFilter(TimeFilter.future),
                             ),
-                            TimeFilter.past: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12),
-                              child: Text('Passadas'),
+                            const SizedBox(width: 8),
+                            _FilterChip(
+                              label: 'Passadas',
+                              active: provider.timeFilter == TimeFilter.past,
+                              onTap: () => provider.setTimeFilter(TimeFilter.past),
                             ),
-                          },
+                          ],
                         ),
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
                             _FilterChip(
