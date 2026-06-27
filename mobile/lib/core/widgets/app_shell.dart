@@ -6,23 +6,37 @@ import 'notification_toast.dart';
 
 class AppShell extends StatefulWidget {
   final Widget child;
-  const AppShell({super.key, required this.child});
+  final String role;
 
-  static const _tabs = [
+  const AppShell({super.key, required this.child, required this.role});
+
+  static const _clientTabs = [
     '/client/services',
     '/client/reservations',
     '/client/notifications',
     '/client/profile',
   ];
-
-  static const _labels = ['Serviços', 'Reservas', 'Notificações', 'Perfil'];
-
-  static const _icons = [
+  static const _clientLabels = ['Serviços', 'Reservas', 'Notificações', 'Perfil'];
+  static const _clientIcons = [
     CupertinoIcons.house_fill,
     CupertinoIcons.calendar,
     CupertinoIcons.bell_fill,
     CupertinoIcons.person_fill,
   ];
+  static const _clientNotifTabIndex = 2;
+
+  static const _providerTabs = [
+    '/provider/reservations',
+    '/provider/services',
+    '/provider/profile',
+  ];
+  static const _providerLabels = ['Reservas', 'Meus Serviços', 'Perfil'];
+  static const _providerIcons = [
+    CupertinoIcons.calendar,
+    CupertinoIcons.briefcase_fill,
+    CupertinoIcons.person_fill,
+  ];
+  static const _providerNotifTabIndex = -1;
 
   @override
   State<AppShell> createState() => _AppShellState();
@@ -30,6 +44,22 @@ class AppShell extends StatefulWidget {
 
 class _AppShellState extends State<AppShell> {
   late NotificationProvider _notifProvider;
+
+  List<String> get _tabs => widget.role == 'PROVIDER'
+      ? AppShell._providerTabs
+      : AppShell._clientTabs;
+
+  List<String> get _labels => widget.role == 'PROVIDER'
+      ? AppShell._providerLabels
+      : AppShell._clientLabels;
+
+  List<IconData> get _icons => widget.role == 'PROVIDER'
+      ? AppShell._providerIcons
+      : AppShell._clientIcons;
+
+  int get _notifTabIndex => widget.role == 'PROVIDER'
+      ? AppShell._providerNotifTabIndex
+      : AppShell._clientNotifTabIndex;
 
   @override
   void initState() {
@@ -56,8 +86,8 @@ class _AppShellState extends State<AppShell> {
 
   int _activeIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    for (int i = 0; i < AppShell._tabs.length; i++) {
-      if (location.startsWith(AppShell._tabs[i])) return i;
+    for (int i = 0; i < _tabs.length; i++) {
+      if (location.startsWith(_tabs[i])) return i;
     }
     return 0;
   }
@@ -75,7 +105,11 @@ class _AppShellState extends State<AppShell> {
           _BottomNavBar(
             activeIndex: activeIndex,
             unreadCount: unreadCount,
-            onTap: (i) => context.go(AppShell._tabs[i]),
+            notifTabIndex: _notifTabIndex,
+            tabs: _tabs,
+            labels: _labels,
+            icons: _icons,
+            onTap: (i) => context.go(_tabs[i]),
           ),
         ],
       ),
@@ -86,14 +120,19 @@ class _AppShellState extends State<AppShell> {
 class _BottomNavBar extends StatelessWidget {
   final int activeIndex;
   final int unreadCount;
+  final int notifTabIndex;
+  final List<String> tabs;
+  final List<String> labels;
+  final List<IconData> icons;
   final ValueChanged<int> onTap;
-
-  static const _labels = AppShell._labels;
-  static const _icons = AppShell._icons;
 
   const _BottomNavBar({
     required this.activeIndex,
     required this.unreadCount,
+    required this.notifTabIndex,
+    required this.tabs,
+    required this.labels,
+    required this.icons,
     required this.onTap,
   });
 
@@ -109,9 +148,11 @@ class _BottomNavBar extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(top: 10, bottom: bottomPadding + 6),
             child: Row(
-              children: List.generate(_labels.length, (i) {
+              children: List.generate(labels.length, (i) {
                 final isActive = i == activeIndex;
-                final color = isActive ? const Color(0xFF34C759) : const Color(0xFF636366);
+                final color = isActive
+                    ? const Color(0xFF34C759)
+                    : const Color(0xFF636366);
                 return Expanded(
                   child: GestureDetector(
                     onTap: () => onTap(i),
@@ -122,8 +163,8 @@ class _BottomNavBar extends StatelessWidget {
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            Icon(_icons[i], size: 24, color: color),
-                            if (i == 2 && unreadCount > 0)
+                            Icon(icons[i], size: 24, color: color),
+                            if (i == notifTabIndex && unreadCount > 0)
                               Positioned(
                                 right: -8,
                                 top: -4,
@@ -133,7 +174,10 @@ class _BottomNavBar extends StatelessWidget {
                                     color: Color(0xFFFF453A),
                                     shape: BoxShape.circle,
                                   ),
-                                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 16,
+                                    minHeight: 16,
+                                  ),
                                   child: Text(
                                     unreadCount > 99 ? '99+' : '$unreadCount',
                                     style: const TextStyle(
@@ -149,10 +193,12 @@ class _BottomNavBar extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _labels[i],
+                          labels[i],
                           style: TextStyle(
                             fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w400,
+                            fontWeight: isActive
+                                ? FontWeight.w700
+                                : FontWeight.w400,
                             color: color,
                           ),
                         ),
