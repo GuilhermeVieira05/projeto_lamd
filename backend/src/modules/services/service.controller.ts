@@ -5,6 +5,7 @@ import {
   makeCreateServiceUseCase,
   makeGetServiceByIdUseCase,
   makeListServicesUseCase,
+  makeListMyServicesUseCase,
   makeUpdateServiceUseCase,
 } from '@shared/container';
 
@@ -22,6 +23,15 @@ export class ServiceController {
   async list(_req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const services = await makeListServicesUseCase().execute();
+      res.json(services);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  async listMine(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const services = await makeListMyServicesUseCase().execute(req.user!.id);
       res.json(services);
     } catch (err) {
       next(err);

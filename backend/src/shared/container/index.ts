@@ -16,6 +16,7 @@ import { UpdateMeUseCase } from '@modules/users/usecases/UpdateMeUseCase';
 import { DeleteMeUseCase } from '@modules/users/usecases/DeleteMeUseCase';
 import { CreateServiceUseCase } from '@modules/services/usecases/CreateServiceUseCase';
 import { ListServicesUseCase } from '@modules/services/usecases/ListServicesUseCase';
+import { ListMyServicesUseCase } from '@modules/services/usecases/ListMyServicesUseCase';
 import { GetServiceByIdUseCase } from '@modules/services/usecases/GetServiceByIdUseCase';
 import { UpdateServiceUseCase } from '@modules/services/usecases/UpdateServiceUseCase';
 import { CreateReservationUseCase } from '@modules/reservations/usecases/CreateReservationUseCase';
@@ -80,6 +81,10 @@ export function makeCreateServiceUseCase(): CreateServiceUseCase {
 
 export function makeListServicesUseCase(): ListServicesUseCase {
   return new ListServicesUseCase(makeServiceRepository());
+}
+
+export function makeListMyServicesUseCase(): ListMyServicesUseCase {
+  return new ListMyServicesUseCase(makeServiceRepository());
 }
 
 export function makeGetServiceByIdUseCase(): GetServiceByIdUseCase {

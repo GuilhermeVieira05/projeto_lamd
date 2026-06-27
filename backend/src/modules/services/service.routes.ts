@@ -21,6 +21,13 @@ serviceRoutes.get(
 );
 
 serviceRoutes.get(
+  '/mine',
+  authMiddleware,
+  roleMiddleware(Role.PROVIDER),
+  (req, res, next) => serviceController.listMine(req, res, next),
+);
+
+serviceRoutes.get(
   '/:id',
   authMiddleware,
   (req, res, next) => serviceController.getById(req, res, next),

@@ -21,6 +21,14 @@ export class ServiceRepository implements IServiceRepository {
     });
   }
 
+  findByProvider(providerId: string): Promise<ServiceType[]> {
+    return this.repository.find({
+      where: { providerId },
+      relations: ['provider'],
+      order: { createdAt: 'DESC' },
+    });
+  }
+
   async create(data: CreateServiceData): Promise<ServiceType> {
     const service = this.repository.create(data);
     return this.repository.save(service);
