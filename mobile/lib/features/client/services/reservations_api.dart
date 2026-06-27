@@ -55,11 +55,13 @@ class ReservationsApi {
     required String serviceTypeId,
     required DateTime scheduledAt,
     String? notes,
+    Map<String, String> clientAnswers = const {},
   }) async {
     await _http.post('/reservations', data: {
       'serviceTypeId': serviceTypeId,
       'scheduledAt': scheduledAt.toUtc().toIso8601String(),
       if (notes != null) 'notes': notes,
+      if (clientAnswers.isNotEmpty) 'clientAnswers': clientAnswers,
     });
   }
 }

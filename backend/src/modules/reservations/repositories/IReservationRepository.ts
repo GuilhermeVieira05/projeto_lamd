@@ -7,6 +7,7 @@ export interface CreateReservationData {
   providerId: string;
   scheduledAt: Date;
   notes?: string;
+  clientAnswers?: Record<string, string>;
 }
 
 export interface IReservationRepository {

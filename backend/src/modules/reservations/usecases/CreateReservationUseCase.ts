@@ -19,6 +19,15 @@ export class CreateReservationUseCase {
       throw new AppError('Scheduled date must be in the future', 400);
     }
 
+    if (service.requiredFields.length > 0) {
+      const answers = data.clientAnswers ?? {};
+      for (const question of service.requiredFields) {
+        if (!answers[question] || answers[question].trim() === '') {
+          throw new AppError(`Resposta obrigatória: ${question}`, 400);
+        }
+      }
+    }
+
     const channel = await getRabbitMQChannel();
     channel.sendToQueue(
       QUEUE_RESERVATION_COMMANDS,
@@ -28,6 +37,7 @@ export class CreateReservationUseCase {
         serviceTypeId: data.serviceTypeId,
         scheduledAt: scheduledAt.toISOString(),
         notes: data.notes,
+        clientAnswers: data.clientAnswers ?? {},
       })),
       { persistent: true, contentType: 'application/json' },
     );

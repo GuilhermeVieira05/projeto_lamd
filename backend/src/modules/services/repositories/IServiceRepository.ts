@@ -6,6 +6,7 @@ export interface CreateServiceData {
   providerId: string;
   price: number;
   durationMinutes: number;
+  requiredFields?: string[];
 }
 
 export interface UpdateServiceData {
@@ -14,11 +15,13 @@ export interface UpdateServiceData {
   price?: number;
   durationMinutes?: number;
   active?: boolean;
+  requiredFields?: string[];
 }
 
 export interface IServiceRepository {
   findById(id: string): Promise<ServiceType | null>;
   findAllActive(): Promise<ServiceType[]>;
+  findByProvider(providerId: string): Promise<ServiceType[]>;
   create(data: CreateServiceData): Promise<ServiceType>;
   update(service: ServiceType, data: UpdateServiceData): Promise<ServiceType>;
 }

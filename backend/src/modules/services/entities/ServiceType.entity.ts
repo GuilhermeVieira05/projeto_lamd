@@ -33,6 +33,9 @@ export class ServiceType {
   @Column({ type: 'boolean', default: true })
   active: boolean;
 
+  @Column({ name: 'required_fields', type: 'jsonb', default: [] })
+  requiredFields: string[];
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

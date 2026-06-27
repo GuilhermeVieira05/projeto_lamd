@@ -9,6 +9,7 @@ interface ReservationCommandPayload {
   serviceTypeId: string;
   scheduledAt: string;
   notes?: string;
+  clientAnswers?: Record<string, string>;
 }
 
 export async function startReservationCommandConsumer(
@@ -23,7 +24,7 @@ export async function startReservationCommandConsumer(
 
     try {
       const payload = JSON.parse(msg.content.toString()) as ReservationCommandPayload;
-      const { clientId, clientName, serviceTypeId, scheduledAt, notes } = payload;
+      const { clientId, clientName, serviceTypeId, scheduledAt, notes, clientAnswers } = payload;
 
       const service = await serviceRepository.findById(serviceTypeId);
 
@@ -57,6 +58,7 @@ export async function startReservationCommandConsumer(
         providerId: service.providerId,
         scheduledAt: scheduledDate,
         notes,
+        clientAnswers: clientAnswers ?? {},
       });
 
       await eventPublisher.publish('reservation.created', {
