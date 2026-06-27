@@ -25,12 +25,17 @@ Flutter App ──REST──► Node.js + Express + TypeORM ──► PostgreSQL
 
 ```
 .
-├── backend/          # API REST (Node.js + Express)
-├── mobile/           # App Flutter (em desenvolvimento — Sprint 3)
+├── backend/          # API REST (Node.js + Express + TypeORM)
+├── mobile/           # App Flutter (CLIENT + PROVIDER)
 ├── docs/
 │   ├── api.md                      # Documentação de endpoints com exemplos
+│   ├── events.md                   # Catálogo de eventos RabbitMQ
 │   ├── postman-collection.json     # Coleção Postman exportada
 │   ├── proposta-dominio.md         # Proposta de domínio
+│   ├── arquitetura.md              # Diagramas de arquitetura e DER
+│   ├── arquitetura-flutter.md      # Camadas internas do app Flutter
+│   ├── relatorio-integracao.md     # Relatório MOM — Sprint 2
+│   ├── relatorio-final.md          # Relatório técnico final
 │   ├── plano-desenvolvimento.md    # Plano de sprints
 │   └── images/
 │       ├── DiagramaArquitetura.png
@@ -41,6 +46,7 @@ Flutter App ──REST──► Node.js + Express + TypeORM ──► PostgreSQL
 ## Pré-requisitos
 
 - [Node.js](https://nodejs.org/) v20+
+- [Flutter](https://flutter.dev/) v3.x
 - [Docker](https://www.docker.com/) e Docker Compose
 - [Git](https://git-scm.com/)
 
@@ -106,6 +112,16 @@ npm run dev
 
 O servidor estará disponível em `http://localhost:3000`.
 
+### 7. Rode o app Flutter
+
+```bash
+cd ../mobile
+flutter pub get
+flutter run
+```
+
+O app detecta automaticamente o role do usuário logado e exibe as telas correspondentes (CLIENT ou PROVIDER).
+
 ## Scripts Disponíveis (backend)
 
 | Script | Descrição |
@@ -141,14 +157,17 @@ Coleção Postman exportada em [`docs/postman-collection.json`](docs/postman-col
 ## Fluxo Principal
 
 ```
-1. Prestador se cadastra e cadastra seus serviços
-2. Cliente se cadastra e navega no catálogo
-3. Cliente cria uma reserva → status: PENDING
-4. Backend publica evento no RabbitMQ (Sprint 2)
-5. Prestador recebe notificação em tempo real
-6. Prestador aceita ou recusa → status: ACCEPTED | REFUSED
-7. Cliente recebe notificação da decisão
-8. Prestador marca serviço como concluído → status: COMPLETED
+1.  Prestador se cadastra e cadastra seus serviços (com perguntas obrigatórias ao cliente)
+2.  Cliente se cadastra e navega no catálogo
+3.  Cliente abre um serviço, preenche as respostas obrigatórias e cria uma reserva
+4.  Backend publica comando na fila reservation.commands → retorna 202 Accepted
+5.  ReservationCommandConsumer processa (prefetch 1) e persiste no PostgreSQL
+6.  Consumer publica reservation.created → NotificationConsumer entrega via WebSocket
+7.  Prestador vê a reserva aparecer em tempo real (badge "Nova") com as respostas do cliente
+8.  Prestador aceita ou recusa → status: ACCEPTED | REFUSED
+9.  Backend publica reservation.accepted/refused → WebSocket notifica o cliente
+10. Cliente vê status atualizado sem refresh
+11. Prestador marca como concluído → status: COMPLETED → cliente recebe notificação final
 ```
 
 ## Documentação
@@ -157,4 +176,8 @@ Coleção Postman exportada em [`docs/postman-collection.json`](docs/postman-col
 - [Diagrama de Arquitetura](docs/images/DiagramaArquitetura.png)
 - [Diagrama ER](docs/images/DiagramaDER.png)
 - [Documentação de Endpoints](docs/api.md)
+- [Catálogo de Eventos RabbitMQ](docs/events.md)
+- [Arquitetura Flutter](docs/arquitetura-flutter.md)
+- [Relatório de Integração MOM](docs/relatorio-integracao.md)
+- [Relatório Técnico Final](docs/relatorio-final.md)
 - [Plano de Desenvolvimento](docs/plano-desenvolvimento.md)
