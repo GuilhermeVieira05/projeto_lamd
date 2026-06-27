@@ -34,6 +34,9 @@ export class Reservation {
   @Column({ type: 'text', nullable: true })
   notes: string | null;
 
+  @Column({ name: 'client_answers', type: 'jsonb', default: {} })
+  clientAnswers: Record<string, string>;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

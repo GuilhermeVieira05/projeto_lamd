@@ -7,6 +7,7 @@ class ServiceModel {
   final double price;
   final int durationMinutes;
   final String providerName;
+  final List<String> requiredFields;
 
   ServiceModel({
     required this.id,
@@ -15,10 +16,12 @@ class ServiceModel {
     required this.price,
     required this.durationMinutes,
     required this.providerName,
+    this.requiredFields = const [],
   });
 
   factory ServiceModel.fromJson(Map<String, dynamic> json) {
     final provider = json['provider'] as Map<String, dynamic>?;
+    final fields = json['requiredFields'] as List<dynamic>?;
     return ServiceModel(
       id: json['id'] as String,
       name: json['name'] as String,
@@ -26,6 +29,7 @@ class ServiceModel {
       price: double.parse(json['price'].toString()),
       durationMinutes: json['durationMinutes'] as int? ?? 0,
       providerName: provider?['name'] as String? ?? '',
+      requiredFields: fields?.map((e) => e as String).toList() ?? [],
     );
   }
 }

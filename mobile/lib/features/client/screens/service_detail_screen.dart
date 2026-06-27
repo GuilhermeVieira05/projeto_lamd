@@ -21,6 +21,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
   ServiceModel? _service;
   bool _isLoading = true;
   bool _isBooking = false;
+  final Map<String, TextEditingController> _answerControllers = {};
   String? _loadError;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
 
@@ -36,22 +37,40 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     _loadService(http);
   }
 
+  @override
+  void dispose() {
+    for (final c in _answerControllers.values) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
   Future<void> _loadService(HttpClient http) async {
     try {
       final api = ServicesApi(http: http);
       final service = await api.getService(widget.serviceId);
-      if (mounted) setState(() { _service = service; _isLoading = false; });
+      if (mounted) {
+        setState(() { _service = service; _isLoading = false; });
+        for (final q in service.requiredFields) {
+          _answerControllers[q] = TextEditingController();
+        }
+      }
     } catch (e) {
       if (mounted) setState(() { _loadError = 'Erro ao carregar serviço'; _isLoading = false; });
     }
   }
 
   Future<void> _book() async {
+    final answers = {
+      for (final entry in _answerControllers.entries)
+        entry.key: entry.value.text.trim()
+    };
     setState(() { _isBooking = true; });
     try {
       await _reservationsApi.createReservation(
         serviceTypeId: widget.serviceId,
         scheduledAt: _selectedDate,
+        clientAnswers: answers,
       );
       if (mounted) {
         await showCupertinoDialog(
@@ -91,6 +110,10 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
       if (mounted) setState(() { _isBooking = false; });
     }
   }
+
+  bool get _allAnswered =>
+      _answerControllers.isEmpty ||
+      _answerControllers.values.every((c) => c.text.trim().isNotEmpty);
 
   void _showDatePicker() {
     final roundedNow = DateTime.now().add(const Duration(hours: 1));
@@ -286,6 +309,50 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                 ),
               ),
 
+              if (_service!.requiredFields.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                _Section(
+                  title: 'Informações necessárias',
+                  child: Column(
+                    children: _service!.requiredFields.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final question = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(
+                          bottom: index < _service!.requiredFields.length - 1 ? 12 : 0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              question,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8e8e93),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            CupertinoTextField(
+                              controller: _answerControllers[question],
+                              placeholder: 'Sua resposta',
+                              style: const TextStyle(color: CupertinoColors.white),
+                              placeholderStyle: const TextStyle(color: Color(0xFF636366)),
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF3a3a3c),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ],
+
               const SizedBox(height: 32),
 
               SizedBox(
@@ -294,7 +361,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   color: const Color(0xFF34C759),
                   borderRadius: BorderRadius.circular(14),
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  onPressed: _isBooking ? null : _book,
+                  onPressed: (_isBooking || !_allAnswered) ? null : _book,
                   child: _isBooking
                       ? const CupertinoActivityIndicator(color: CupertinoColors.white)
                       : const Row(
