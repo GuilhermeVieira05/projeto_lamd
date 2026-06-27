@@ -229,9 +229,9 @@ class _ServiceFormScreenState extends State<ServiceFormScreen> {
               ),
               const SizedBox(height: 24),
               const _FieldLabel('Informações solicitadas ao cliente'),
+              const SizedBox(height: 8),
               if (_requiredFields.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                ..._requiredFields.asMap().entries.map((entry) {
+                ..._requiredFields.take(3).toList().asMap().entries.map((entry) {
                   final index = entry.key;
                   final question = entry.value;
                   return Padding(
@@ -241,7 +241,7 @@ class _ServiceFormScreenState extends State<ServiceFormScreen> {
                         color: const Color(0xFF2c2c2e),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                       child: Row(
                         children: [
                           Expanded(
@@ -250,20 +250,32 @@ class _ServiceFormScreenState extends State<ServiceFormScreen> {
                               style: const TextStyle(color: CupertinoColors.white, fontSize: 15),
                             ),
                           ),
-                          CupertinoButton(
-                            padding: EdgeInsets.zero,
-                            minimumSize: Size.zero,
-                            child: const Icon(CupertinoIcons.minus_circle, color: Color(0xFFFF3B30), size: 20),
-                            onPressed: () => setState(() => _requiredFields.removeAt(index)),
+                          GestureDetector(
+                            onTap: () => setState(() => _requiredFields.removeAt(index)),
+                            child: const Icon(CupertinoIcons.minus_circle_fill, color: Color(0xFFFF3B30), size: 20),
                           ),
                         ],
                       ),
                     ),
                   );
                 }),
+                if (_requiredFields.length > 3)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3a3a3c),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      child: Text(
+                        '+ ${_requiredFields.length - 3} pergunta${_requiredFields.length - 3 > 1 ? 's' : ''} adicionada${_requiredFields.length - 3 > 1 ? 's' : ''}',
+                        style: const TextStyle(color: Color(0xFF8e8e93), fontSize: 14),
+                      ),
+                    ),
+                  ),
               ],
               if (_requiredFields.length < 10) ...[
-                const SizedBox(height: 8),
                 Row(
                   children: [
                     Expanded(
@@ -280,11 +292,8 @@ class _ServiceFormScreenState extends State<ServiceFormScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                      color: const Color(0xFF007AFF),
-                      borderRadius: BorderRadius.circular(12),
-                      onPressed: () {
+                    GestureDetector(
+                      onTap: () {
                         final q = _newQuestionController.text.trim();
                         if (q.isNotEmpty) {
                           setState(() {
@@ -293,7 +302,21 @@ class _ServiceFormScreenState extends State<ServiceFormScreen> {
                           });
                         }
                       },
-                      child: const Text('Adicionar', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF007AFF),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Adicionar',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: CupertinoColors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

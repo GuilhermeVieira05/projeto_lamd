@@ -11,6 +11,10 @@ import 'features/client/providers/reservations_provider.dart';
 import 'features/client/providers/services_provider.dart';
 import 'features/client/services/reservations_api.dart';
 import 'features/client/services/services_api.dart';
+import 'features/provider/providers/provider_reservations_provider.dart';
+import 'features/provider/providers/provider_services_provider.dart';
+import 'features/provider/services/provider_reservations_api.dart';
+import 'features/provider/services/provider_services_api.dart';
 import 'package:go_router/go_router.dart';
 
 void main() async {
@@ -34,6 +38,8 @@ class _AppRootState extends State<AppRoot> {
   late final NotificationProvider _notificationProvider;
   late final ServicesProvider _servicesProvider;
   late final ReservationsProvider _reservationsProvider;
+  late final ProviderReservationsProvider _providerReservationsProvider;
+  late final ProviderServicesProvider _providerServicesProvider;
   late final GoRouter _router;
 
   @override
@@ -50,6 +56,13 @@ class _AppRootState extends State<AppRoot> {
       api: ReservationsApi(http: _httpClient),
       ws: _wsClient,
     );
+    _providerReservationsProvider = ProviderReservationsProvider(
+      api: ProviderReservationsApi(http: _httpClient),
+      ws: _wsClient,
+    );
+    _providerServicesProvider = ProviderServicesProvider(
+      api: ProviderServicesApi(http: _httpClient),
+    );
     _router = createRouter(_authProvider);
   }
 
@@ -58,6 +71,8 @@ class _AppRootState extends State<AppRoot> {
     _authProvider.dispose();
     _notificationProvider.dispose();
     _reservationsProvider.dispose();
+    _providerReservationsProvider.dispose();
+    _providerServicesProvider.dispose();
     _wsClient.dispose();
     super.dispose();
   }
@@ -70,6 +85,8 @@ class _AppRootState extends State<AppRoot> {
         ChangeNotifierProvider.value(value: _notificationProvider),
         ChangeNotifierProvider.value(value: _servicesProvider),
         ChangeNotifierProvider.value(value: _reservationsProvider),
+        ChangeNotifierProvider.value(value: _providerReservationsProvider),
+        ChangeNotifierProvider.value(value: _providerServicesProvider),
       ],
       child: CupertinoApp.router(
         title: 'Reserva de Serviços',
