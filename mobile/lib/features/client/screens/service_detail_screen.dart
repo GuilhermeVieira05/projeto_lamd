@@ -122,7 +122,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
     }
     showCupertinoModalPopup(
       context: context,
-      builder: (_) => Container(
+      builder: (modalContext) => Container(
         height: 320,
         decoration: const BoxDecoration(
           color: Color(0xFF2c2c2e),
@@ -142,7 +142,7 @@ class _ServiceDetailScreenState extends State<ServiceDetailScreen> {
                   CupertinoButton(
                     padding: EdgeInsets.zero,
                     child: const Text('Confirmar', style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF34C759))),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.pop(modalContext),
                   ),
                 ],
               ),

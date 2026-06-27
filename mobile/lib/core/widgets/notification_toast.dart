@@ -59,6 +59,8 @@ class _ToastWidgetState extends State<_ToastWidget>
 
   Color get _borderColor {
     switch (_type) {
+      case 'reservation.created':
+        return const Color(0xFFFF9500);
       case 'reservation.accepted':
         return const Color(0xFF34C759);
       case 'reservation.refused':
@@ -72,6 +74,8 @@ class _ToastWidgetState extends State<_ToastWidget>
 
   String get _label {
     switch (_type) {
+      case 'reservation.created':
+        return 'NOVA RESERVA';
       case 'reservation.accepted':
         return 'RESERVA ACEITA';
       case 'reservation.refused':
@@ -92,12 +96,21 @@ class _ToastWidgetState extends State<_ToastWidget>
   @override
   Widget build(BuildContext context) {
     final inner = (widget.message.payload['payload'] as Map<String, dynamic>?) ?? widget.message.payload;
-    final providerName = inner['providerName'] as String? ?? '';
     final scheduledAtRaw = inner['scheduledAt'] as String?;
     final dateStr = scheduledAtRaw != null
         ? DateFormat("dd/MM 'às' HH:mm", 'pt_BR')
             .format(DateTime.parse(scheduledAtRaw).toLocal())
         : '';
+
+    final String primaryText;
+    final String secondaryText;
+    if (_type == 'reservation.created') {
+      primaryText = inner['clientName'] as String? ?? '';
+      secondaryText = inner['serviceType'] as String? ?? '';
+    } else {
+      primaryText = inner['providerName'] as String? ?? '';
+      secondaryText = dateStr;
+    }
 
     return Positioned(
       top: MediaQuery.of(context).padding.top + 60,
@@ -138,10 +151,10 @@ class _ToastWidgetState extends State<_ToastWidget>
                       letterSpacing: 0.5,
                     ),
                   ),
-                  if (providerName.isNotEmpty) ...[
+                  if (primaryText.isNotEmpty) ...[
                     const SizedBox(height: 2),
                     Text(
-                      providerName,
+                      primaryText,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
@@ -149,10 +162,10 @@ class _ToastWidgetState extends State<_ToastWidget>
                       ),
                     ),
                   ],
-                  if (dateStr.isNotEmpty) ...[
+                  if (secondaryText.isNotEmpty) ...[
                     const SizedBox(height: 1),
                     Text(
-                      dateStr,
+                      secondaryText,
                       style: const TextStyle(
                         fontSize: 12,
                         color: CupertinoColors.systemGrey,
