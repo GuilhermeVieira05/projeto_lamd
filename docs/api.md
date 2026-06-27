@@ -127,6 +127,42 @@ Content-Type: application/json
 
 ---
 
+### GET /services/mine
+
+Lista os serviços do **prestador autenticado** (ativos **e** inativos), do mais recente para o mais antigo. Apenas prestadores (`PROVIDER`).
+
+**Request**
+```http
+GET /services/mine
+Authorization: Bearer <token-de-um-provider>
+```
+
+**Response 200**
+```json
+[
+  {
+    "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "name": "Limpeza Residencial",
+    "description": "Limpeza completa de residências até 100m²",
+    "price": "150.00",
+    "durationMinutes": 180,
+    "active": true,
+    "provider": {
+      "id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+      "name": "Maria Prestadora"
+    },
+    "created_at": "2026-05-09T10:05:00.000Z"
+  }
+]
+```
+
+**Response 403** — usuário não é PROVIDER
+```json
+{ "message": "Forbidden" }
+```
+
+---
+
 ### GET /services
 
 Lista todos os serviços disponíveis (ativos).
