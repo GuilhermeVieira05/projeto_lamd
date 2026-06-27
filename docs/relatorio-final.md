@@ -172,3 +172,5 @@ A decisão arquitetural mais importante foi **tratar a criação de reserva como
 - [`docs/arquitetura-flutter.md`](arquitetura-flutter.md) — camadas internas do app
 - [`docs/relatorio-integracao.md`](relatorio-integracao.md) — relatório de integração do MOM (Sprint 2)
 - [`docs/postman-collection.json`](postman-collection.json) — coleção Postman para testar a API
+- [Vídeo Sprint 3](https://github.com/GuilhermeVieira05/projeto_lamd/releases/tag/sprint-3) — demonstração do app Flutter com notificações em tempo real
+- [Vídeo Sprint 4](https://github.com/GuilhermeVieira05/projeto_lamd/releases/tag/sprint-4) — demonstração das telas do prestador e perguntas obrigatórias na reserva

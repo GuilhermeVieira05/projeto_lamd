@@ -170,6 +170,13 @@ Coleção Postman exportada em [`docs/postman-collection.json`](docs/postman-col
 11. Prestador marca como concluído → status: COMPLETED → cliente recebe notificação final
 ```
 
+## Vídeos de Demonstração
+
+| Sprint | Link | Conteúdo |
+|---|---|---|
+| Sprint 3 | [GitHub Release](https://github.com/GuilhermeVieira05/projeto_lamd/releases/tag/sprint-3) | App Flutter com notificações em tempo real |
+| Sprint 4 | [GitHub Release](https://github.com/GuilhermeVieira05/projeto_lamd/releases/tag/sprint-4) | Telas do prestador e perguntas obrigatórias na reserva |
+
 ## Documentação
 
 - [Proposta de Domínio](docs/proposta-dominio.md)
